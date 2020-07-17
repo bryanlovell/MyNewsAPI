@@ -1,0 +1,320 @@
+<html>
+    <head>
+        <% include ../partials/header.ejs %>
+    </head>
+    <body>
+    <div align="center">   
+        <div class="container p-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="modal-title" id="exampleModalLabel" >Search For Latest News</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Keywords</label>
+                            <div class="col-sm-10">
+                                <input class="form-control" id="txt_name" type="text" name="text" required>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary" id="txtbtn" type="button" name="btn">Search</button>
+
+                        <a href="#history">View Search Histories</a>
+                    </div>
+                </div>
+        </div>
+    </div>  
+        <div class="mx-auto w-50 p-3 text-center" id="list"> 
+            <table class="table table-striped table-responsive center" id="comp_list" >
+                <thead>
+                </thead>
+                <tbody> </tbody>
+            </table>
+        </div>
+        <main class="main-area">
+
+            <div class="centered">
+          
+                <section class="cards" id="crd">
+                </section>
+
+            </div>
+
+        </main>
+
+        <div id="history" align="center">
+            <h2 style="color: black;">Recent Searches</h2>
+            <button class="btn btn-primary" id="dtbtn" type="button" name="btn">Delete History</button>
+            <section id="historyList"></section>
+        </div>
+         <!-- The Modal -->
+        <div class="modal fade" id="modal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                <h4 class="modal-title" text-align="center">News Information</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                
+
+                <!-- Modal body -->
+                <div class="modal-body">
+                    <div class="input-group">
+                        <img height="320" width="450" id="img">
+                    </div>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="">Source</span>
+                        </div>
+                        <input type="text" class="form-control" id="source" readonly>
+                    </div>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="">URL</span>
+                        </div>
+                        <a target="_blank" class="form-control text-truncate" style="max-width: 466px;" id="url" readonly></a>
+                    </div>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="">Website Traffic</span>
+                        </div>
+                        <a target="_blank" class="form-control text-truncate" style="max-width: 466px;" id="track" readonly></a>
+                    </div>
+                    
+                    <div class="form-group row">
+                        <span class="col-sm-2 col-form-label" id="">Description:</span>
+                    </div>
+                    <div class="col-sm-10">
+                        <textarea class="form-control-plaintext rounded-0" id="desc" wrap="hard" cols="50" rows="6" readonly></textarea>
+                    </div>
+                    <div class="form-group row">
+                            <span class="col-sm-2 col-form-label" id="">Content</span>
+                        </div>
+                        <div class="col-sm-10">
+                            <textarea class="form-control-plaintext rounded-0" id="content" wrap="hard" cols="50" rows="8" readonly></textarea>
+                        </div>
+                </div>
+                
+                <!-- Modal footer -->
+                <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                </div>
+                    
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function getSearchHistory() {
+                $.ajax({
+                   type: 'GET',
+                   url: '/searchhistory',
+                   success: function (data) {
+                       if(data.length > 0) {
+                        var UL = document.createElement("ul");
+
+                        for(var i in data) {
+                           console.log(data[i].keyword)
+                           // Populate your history list
+                           var LI = document.createElement("li"); 
+                           var hisLi = document.createElement("h6");
+                            var hisList = document.createTextNode(data[i].keyword);
+                            hisLi.appendChild(hisList);
+                            LI.appendChild(hisLi);
+                            UL.appendChild(LI);
+                        }
+
+                        document.getElementById("historyList").appendChild(UL);
+
+                       } else {
+                           // Display no result
+                           var emptyStyle = document.createElement("h6");
+                           var emptyText = document.createTextNode("Your recent searches is empty");
+                           emptyStyle.appendChild(emptyText);
+                       }
+                       
+                   },
+                   error: function (err) {
+                       console.log(err)
+                   }
+               })
+            }
+
+            $(document).ready( function () {
+               getSearchHistory()
+            });
+
+            $('#dtbtn').click(function(){
+                $.ajax({
+                    type:"POST",
+                    dataType:"json",
+                    data: {},
+                    url:"/delete",
+                    success:function(data){
+                        alert('Done')
+                    },
+                    error: function(err) {
+                        console.log(err)
+                    }
+                })
+            })
+
+
+            $('#txtbtn').click(function() {
+                var inpuz = document.getElementById('txt_name').value;
+                if(inpuz.length < 1 ){
+                    alert("Please don't blank it")
+                }
+                else{
+                    $.ajax({
+                        type:"POST",
+                        dataType: "json",
+                        data:{
+                            comp: inpuz
+                        },
+                        url:"/searchnews",
+                        success:function(data)
+                        {
+                            console.log(data);
+                            if(data.length < 1){
+                                alert("Empty Data");
+                            }
+                            else{
+                                for(var x=1; x<data.length; x++) {
+                                    var source = data[x][0].source;
+                                    var author = data[x][0].author;
+                                    var title = data[x][0].title;
+                                    var DateOfPublish = data[x][0].date;
+                                    DateOfPublish = DateOfPublish.slice(0, 10);
+                                    var description = data[x][0].desc;
+                                    if(!description == null){
+                                        description = description.replace(/[<\\>\\/\\"\\=]+/g, "");
+                                    }
+                                    var url = data[x][0].url;
+                                    var img = data[x][0].img;
+                                    var content = data[x][0].content;
+                                    if(!content == null){
+                                        content = content.replace(/[<\\>\\/\\"\\=]+/g, "");
+                                    }
+                                    titles = title.replace(/["]+/g, '');
+
+                                    var element = document.getElementById("crd");
+                                    // Article Class
+                                    var article = document.createElement("article");
+                                    var classes = document.createAttribute("class");
+                                    classes.value = "card";
+                                    article.setAttributeNode(classes);
+                                    
+                                    // a tag 
+                                    var attr = document.createElement("a");
+                                    var aid = document.createAttribute("id");
+                                    aid.value = "action"
+                                    var tgl = document.createAttribute("data-toggle");
+                                    tgl.value = "modal";
+                                    var tgt = document.createAttribute("data-target");
+                                    tgt.value = "#modal";
+                                    var s1 = document.createAttribute("data-source");
+                                    s1.value = source;
+                                    var s2 = document.createAttribute("data-author");
+                                    s2.value = author;
+                                    var s3 = document.createAttribute("data-title");
+                                    s3.value = title;
+                                    var s4 = document.createAttribute("data-desc");
+                                    s4.value = description;
+                                    var s5 = document.createAttribute("data-url");
+                                    s5.value = url;
+                                    var s6 = document.createAttribute("data-img");
+                                    s6.value = img;
+                                    var s7 = document.createAttribute("data-date");
+                                    s7.value = DateOfPublish;
+                                    var s8 = document.createAttribute("data-cont");
+                                    s8.value = content;
+                                    attr.setAttributeNode(s1);
+                                    attr.setAttributeNode(s2);
+                                    attr.setAttributeNode(s3);
+                                    attr.setAttributeNode(s4);
+                                    attr.setAttributeNode(s5);
+                                    attr.setAttributeNode(s6);
+                                    attr.setAttributeNode(s7);
+                                    attr.setAttributeNode(s8);
+                                    attr.setAttributeNode(tgl);
+                                    attr.setAttributeNode(tgt);
+                                    attr.setAttributeNode(aid);
+
+                                    //Figure tag
+                                    var fig = document.createElement("figure");
+                                    var cls = document.createAttribute("class");
+                                    cls.value = "thumbnail";
+                                    fig.setAttributeNode(cls);
+
+                                    //Img tag
+                                    var imgs = document.createElement("img");
+                                    var src = document.createAttribute("src");
+                                    var imgid = document.createAttribute("id");
+                                    imgid.value = x;
+                                    imgs.setAttributeNode(src);
+                                    imgs.setAttributeNode(imgid);
+                                    
+                                
+
+                                    //div content
+                                    var content = document.createElement("div");
+                                    var clss = document.createAttribute("class");
+                                    clss.value = "card-content";
+                                    content.setAttributeNode(clss);
+                                    
+                                    //h5 tag
+                                    var parag = document.createElement("h5");
+                                    var cls = document.createTextNode(title);
+                                    parag.appendChild(cls);
+
+                                    //p tag
+                                    var publish = document.createElement("p");
+                                    var dateP = document.createTextNode(DateOfPublish);
+                                    publish.appendChild(dateP);
+
+                                    
+                                   
+                                    article.appendChild(attr);
+                                    attr.appendChild(fig);
+                                    fig.appendChild(imgs);
+                                    content.appendChild(parag);
+                                    content.appendChild(publish);
+                                    attr.appendChild(content);
+                                    element.appendChild(article);
+                                    document.getElementById(x).src = img;
+                                }             
+                            }
+                        }
+                    });                    
+                }
+            })
+
+            $(document).on("click", "#action", function () {
+                var description = $(this).data('desc');
+                var source = $(this).data('source');
+                var website = "https://www.similarweb.com/website/"+source+"";
+                var author = $(this).data('author');
+                var title = $(this).data('title');
+                var url = $(this).data('url');
+                var img = $(this).data('img');
+                var date = $(this).data('date');
+                var content = $(this).data('cont');
+                $("#desc").val(description);
+                $("#source").val(source);
+                $("#author").val(author);
+                $("#title").val(title);
+                $("#url").attr("href",url);
+                $("#url").text(url);
+                $("#img").attr("src",img)
+                $("#date").val(date);
+                $("#content").val(content);
+                $("#track").attr("href",website);
+                $("#track").text(website);
+            });  
+
+        </script>
+
+    </body>
+</html>

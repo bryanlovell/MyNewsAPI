@@ -132,6 +132,8 @@
                            var emptyStyle = document.createElement("h6");
                            var emptyText = document.createTextNode("Your recent searches is empty");
                            emptyStyle.appendChild(emptyText);
+
+                           document.getElementById("historyList").appendChild(emptyStyle);
                        }
                        
                    },
@@ -163,6 +165,7 @@
 
             $('#txtbtn').click(function() {
                 var inpuz = document.getElementById('txt_name').value;
+                
                 if(inpuz.length < 1 ){
                     alert("Please don't blank it")
                 }
@@ -181,7 +184,7 @@
                                 alert("Empty Data");
                             }
                             else{
-                                for(var x=1; x<data.length; x++) {
+                                for(var x=1; x<13; x++) {
                                     var source = data[x][0].source;
                                     var author = data[x][0].author;
                                     var title = data[x][0].title;
@@ -289,6 +292,8 @@
                         }
                     });                    
                 }
+
+                
             })
 
             $(document).on("click", "#action", function () {
